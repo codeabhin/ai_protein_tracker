@@ -362,6 +362,14 @@ def profile_view(request):
             messages.success(request, "Your profile and nutrition targets have been updated!")
             return redirect('profile')
     else:
+        form = UserProfileForm(instance=profile)
+
+    return render(request, 'tracker/profile.html', {
+        'form': form,
+        'profile': profile,
+    })
+
+
 # ==============================================================================
 # SCIENTIFIC & TECHNICAL BIBLIOGRAPHY (Preserved in Codebase)
 # The 8 authoritative references and technical frameworks underpinning the system
