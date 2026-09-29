@@ -1,0 +1,111 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}User Profile & Targets - ProteinAI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Personal Health Profile &amp; Targets</h1>
+        <p class="page-subtitle">Update your metrics to automatically adjust your scientific protein and calorie goals.</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2rem; align-items: start;">
+    <!-- Profile Edit Form -->
+    <div class="card">
+        <h3 class="card-title">Anthropometric &amp; Training Profile</h3>
+        
+        <form method="POST" action="{% url 'profile' %}">
+            {% csrf_token %}
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.weight_kg.id_for_label }}">Weight (kg)</label>
+                    {{ form.weight_kg }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.height_cm.id_for_label }}">Height (cm)</label>
+                    {{ form.height_cm }}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.age.id_for_label }}">Age</label>
+                    {{ form.age }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.gender.id_for_label }}">Biological Sex</label>
+                    {{ form.gender }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.activity_level.id_for_label }}">Physical Activity Level</label>
+                {{ form.activity_level }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.fitness_goal.id_for_label }}">Fitness Goal</label>
+                {{ form.fitness_goal }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.dietary_preference.id_for_label }}">Dietary Preference</label>
+                {{ form.dietary_preference }}
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    Update Profile &amp; Recalculate Targets
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Active Targets Card -->
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div class="card" style="background: white; border-top: 4px solid var(--primary);">
+            <h3 class="card-title">Active Calibrated Targets</h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);">
+                    <span style="font-weight: 600;">Daily Protein Target</span>
+                    <span class="badge badge-protein" style="font-size: 1.1rem; padding: 0.35rem 0.75rem;">{{ profile.target_protein_g }}g</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);">
+                    <span style="font-weight: 600;">Daily Energy Target</span>
+                    <span class="badge badge-calorie" style="font-size: 1.1rem; padding: 0.35rem 0.75rem;">{{ profile.target_calories }} kcal</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);">
+                    <span style="font-weight: 600;">Carbohydrates Target</span>
+                    <span class="badge badge-carb" style="font-size: 1.1rem; padding: 0.35rem 0.75rem;">{{ profile.target_carbs_g }}g</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 600;">Healthy Fats Target</span>
+                    <span class="badge badge-fat" style="font-size: 1.1rem; padding: 0.35rem 0.75rem;">{{ profile.target_fat_g }}g</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 1.5rem; text-align: center;">
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-sm" style="width: 100%;">
+                    &larr; Return to Daily Dashboard
+                </a>
+            </div>
+        </div>
+
+        <div class="card" style="background: var(--bg-elevated);">
+            <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem;">User Account Details</h4>
+            <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+                <strong>Username:</strong> {{ user.username }}<br>
+                <strong>Email:</strong> {{ user.email|default:"Not specified" }}<br>
+                <strong>Account Type:</strong> Standard User<br>
+                <strong>Last Updated:</strong> {{ profile.updated_at|date:"M d, Y H:i" }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

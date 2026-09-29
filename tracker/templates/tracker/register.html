@@ -1,0 +1,106 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Sign Up - ProteinAI{% endblock %}
+
+{% block content %}
+<div style="max-width: 580px; margin: 2rem auto;">
+    <div class="card" style="padding: 2.5rem 2rem;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <div class="brand-icon" style="margin: 0 auto 1rem; width: 48px; height: 48px; font-size: 1.5rem;">⚡</div>
+            <h2 style="font-size: 1.6rem; font-weight: 800;">Create Your Account</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">
+                Set up your profile to receive scientific protein &amp; macro targets
+            </p>
+        </div>
+
+        <form method="POST" action="{% url 'register' %}">
+            {% csrf_token %}
+
+            {% if form.errors %}
+            <div class="alert alert-error" style="margin-bottom: 1.25rem;">
+                <ul style="padding-left: 1.25rem; font-size: 0.88rem;">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.username.id_for_label }}">Username</label>
+                    {{ form.username }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.email.id_for_label }}">Email</label>
+                    {{ form.email }}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.password.id_for_label }}">Password</label>
+                    {{ form.password }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.password_confirm.id_for_label }}">Confirm Password</label>
+                    {{ form.password_confirm }}
+                </div>
+            </div>
+
+            <h4 style="font-size: 0.95rem; font-weight: 700; margin: 1.5rem 0 1rem; color: var(--primary-dark); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                Anthropometric &amp; Lifestyle Data (For NIH/WHO Targeting)
+            </h4>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.weight_kg.id_for_label }}">Weight (kg)</label>
+                    {{ form.weight_kg }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.height_cm.id_for_label }}">Height (cm)</label>
+                    {{ form.height_cm }}
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.age.id_for_label }}">Age</label>
+                    {{ form.age }}
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.gender.id_for_label }}">Biological Sex</label>
+                    {{ form.gender }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.activity_level.id_for_label }}">Physical Activity Level</label>
+                {{ form.activity_level }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.fitness_goal.id_for_label }}">Fitness Goal</label>
+                {{ form.fitness_goal }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.dietary_preference.id_for_label }}">Dietary Preference</label>
+                {{ form.dietary_preference }}
+            </div>
+
+            <div style="margin-top: 1.75rem;">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    Create Account &amp; Generate Plan
+                </button>
+            </div>
+        </form>
+
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.88rem; color: var(--text-muted);">
+            Already have an account? <a href="{% url 'login' %}" style="font-weight: 600;">Log in</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}AI Protein Intake Calculator & Diet Food Tracking System{% endblock %}
+
+{% block content %}
+<div style="padding-top: 1rem;">
+    <!-- Hero Banner -->
+    <div style="text-align: center; max-width: 900px; margin: 0 auto 3.5rem;">
+        <span class="badge badge-protein" style="font-size: 0.85rem; padding: 0.35rem 0.85rem; margin-bottom: 1rem;">
+            ⚡ Smart AI Nutrition Tracking
+        </span>
+        <h1 style="font-size: 2.75rem; font-weight: 800; line-height: 1.2; letter-spacing: -0.03em; margin-bottom: 1.25rem;">
+            AI Protein Intake Calculator & <br><span style="color: var(--primary);">Diet Food Tracking System</span>
+        </h1>
+        <p style="font-size: 1.15rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 2rem;">
+            Calculate your personalized daily protein requirement, track your meals with comprehensive nutritional accuracy, and let AI recommend optimal food combinations to hit your fitness and body composition goals.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="{% url 'calculator' %}" class="btn btn-primary btn-lg">🧮 Launch AI Calculator</a>
+            <a href="{% url 'demo_login' %}" class="btn btn-secondary btn-lg">🚀 Launch Instant Demo Dashboard</a>
+            <a href="{% url 'food_database' %}" class="btn btn-secondary btn-lg">🥗 Explore Food Database</a>
+        </div>
+    </div>
+
+    <!-- 4 Core Pillars Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-bottom: 4rem;">
+        <div class="card" style="border-top: 4px solid var(--primary);">
+            <div style="font-size: 2rem; margin-bottom: 0.75rem;">🧬</div>
+            <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">Precision Protein Engine</h3>
+            <p style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.5;">
+                Calculates optimal daily protein requirements based on your body weight, activity level, and specific fitness goals (muscle hypertrophy, fat loss, or vitality).
+            </p>
+        </div>
+
+        <div class="card" style="border-top: 4px solid var(--accent);">
+            <div style="font-size: 2rem; margin-bottom: 0.75rem;">🤖</div>
+            <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">AI Smart Deficit Closer</h3>
+            <p style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.5;">
+                Dynamic recommendation heuristics continuously monitor your logged meals and generate calorie-efficient food suggestions to hit remaining protein targets without overshooting calories.
+            </p>
+        </div>
+
+        <div class="card" style="border-top: 4px solid #10b981;">
+            <div style="font-size: 2rem; margin-bottom: 0.75rem;">🥗</div>
+            <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">Rich Food Database</h3>
+            <p style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.5;">
+                Pre-populated with verified whole foods, lean meats, plant proteins, and snacks with complete macronutrient breakdowns per 100g.
+            </p>
+        </div>
+
+        <div class="card" style="border-top: 4px solid #f59e0b;">
+            <div style="font-size: 2rem; margin-bottom: 0.75rem;">⚖️</div>
+            <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem;">Balanced Macro Tracking</h3>
+            <p style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.5;">
+                Intelligently balances healthy fats, complex carbohydrates, and dietary fiber tailored to your daily caloric burn and dietary preferences.
+            </p>
+        </div>
+    </div>
+
+    <!-- Featured High-Protein Foods Section -->
+    <div style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h2 style="font-size: 1.6rem; font-weight: 800;">Featured High-Protein Foods</h2>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">Nutrient-dense protein sources with full macro profiles per 100 grams</p>
+            </div>
+            <a href="{% url 'food_database' %}" class="btn btn-outline btn-sm">View All Foods &rarr;</a>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem;">
+            {% for food in featured_foods %}
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                        <span class="badge badge-verified">Verified</span>
+                        <span class="badge badge-protein">{{ food.protein_per_100g }}g Protein / 100g</span>
+                    </div>
+                    <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.35rem;">{{ food.name }}</h4>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                        Standard serving: {{ food.serving_unit_name }}
+                    </p>
+                </div>
+                <div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; font-size: 0.82rem; margin-bottom: 1rem;">
+                        <span class="badge badge-calorie">{{ food.calories_per_100g }} kcal</span>
+                        <span class="badge badge-carb">{{ food.carbs_per_100g }}g Carbs</span>
+                        <span class="badge badge-fat">{{ food.fat_per_100g }}g Fat</span>
+                    </div>
+                    <a href="{% url 'demo_login' %}" class="btn btn-secondary btn-sm" style="width: 100%;">
+                        + Log to Daily Diary
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

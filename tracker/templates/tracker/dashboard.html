@@ -1,0 +1,525 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}Daily Food & Protein Tracker - ProteinAI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Daily Nutrition & Protein Tracker</h1>
+        <p class="page-subtitle">
+            Daily target: <strong>{{ target_protein }}g protein</strong> ({{ profile.get_fitness_goal_display }})
+        </p>
+    </div>
+
+    <!-- Date Navigation & Quick Action -->
+    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+        <div style="display: flex; background: white; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden;">
+            <a href="?date={{ prev_date|date:'Y-m-d' }}" class="btn btn-secondary btn-sm" style="border: none; border-radius: 0;">&larr; Prev</a>
+            <span style="padding: 0.35rem 0.85rem; font-weight: 700; font-size: 0.88rem; display: flex; align-items: center; background: var(--bg-elevated);">
+                {{ current_date|date:"M d, Y" }}{% if is_today %} (Today){% endif %}
+            </span>
+            <a href="?date={{ next_date|date:'Y-m-d' }}" class="btn btn-secondary btn-sm" style="border: none; border-radius: 0;">Next &rarr;</a>
+        </div>
+
+        <button class="btn btn-primary" data-open-modal="logMealModal" data-meal-type="lunch">
+            + Log Food Item
+        </button>
+    </div>
+</div>
+
+<!-- Macro Summary Statistics Grid -->
+<div class="stats-grid">
+    <!-- Protein Card -->
+    <div class="stat-card stat-protein">
+        <div class="stat-header">
+            <span>PROTEIN INTAKE</span>
+            <span class="badge badge-protein">{{ protein_pct }}%</span>
+        </div>
+        <div class="stat-value">
+            {{ logged_protein }} <span style="font-size: 1rem; color: var(--text-muted);">g</span>
+        </div>
+        <div class="stat-target">Target: {{ target_protein }}g &bull; {% if remaining_protein > 0 %}<strong>{{ remaining_protein }}g</strong> left{% else %}Target achieved! 🎉{% endif %}</div>
+        <div class="progress-bar-container">
+            <div class="progress-track">
+                <div class="progress-fill fill-protein" style="width: {{ protein_pct }}%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calories Card -->
+    <div class="stat-card stat-calories">
+        <div class="stat-header">
+            <span>TOTAL CALORIES</span>
+            <span class="badge badge-calorie">{{ calories_pct }}%</span>
+        </div>
+        <div class="stat-value">
+            {{ logged_calories }} <span style="font-size: 1rem; color: var(--text-muted);">kcal</span>
+        </div>
+        <div class="stat-target">Target: {{ target_calories }} kcal &bull; {{ remaining_calories }} kcal left</div>
+        <div class="progress-bar-container">
+            <div class="progress-track">
+                <div class="progress-fill fill-calories" style="width: {{ calories_pct }}%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carbohydrates Card -->
+    <div class="stat-card stat-carbs">
+        <div class="stat-header">
+            <span>CARBOHYDRATES</span>
+            <span class="badge badge-carb">{{ carbs_pct }}%</span>
+        </div>
+        <div class="stat-value">
+            {{ logged_carbs }} <span style="font-size: 1rem; color: var(--text-muted);">g</span>
+        </div>
+        <div class="stat-target">Target: {{ target_carbs }}g (Carbohydrates)</div>
+        <div class="progress-bar-container">
+            <div class="progress-track">
+                <div class="progress-fill fill-carbs" style="width: {{ carbs_pct }}%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dietary Fat Card -->
+    <div class="stat-card stat-fat">
+        <div class="stat-header">
+            <span>HEALTHY FATS</span>
+            <span class="badge badge-fat">{{ fat_pct }}%</span>
+        </div>
+        <div class="stat-value">
+            {{ logged_fat }} <span style="font-size: 1rem; color: var(--text-muted);">g</span>
+        </div>
+        <div class="stat-target">Target: {{ target_fat }}g (Healthy Fats)</div>
+        <div class="progress-bar-container">
+            <div class="progress-track">
+                <div class="progress-fill fill-fat" style="width: {{ fat_pct }}%;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Recommendation & Smart Deficit Closer -->
+<div class="ai-recommendation-card">
+    <div class="ai-header">
+        <span class="ai-icon-badge">🤖 AI Diet Assistant</span>
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: #065f46;">{{ ai_suggestions.headline }}</h3>
+    </div>
+
+    {% for insight in ai_suggestions.insights %}
+    <p style="font-size: 0.92rem; color: #1e293b; margin-bottom: 0.4rem;">
+        &bull; {{ insight }}
+    </p>
+    {% endfor %}
+
+    {% if ai_suggestions.boosters %}
+    <div style="margin-top: 1rem;">
+        <span style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: #047857; letter-spacing: 0.05em;">
+            Suggested Foods to Hit Your Protein Target:
+        </span>
+        <div class="ai-boosters-grid">
+            {% for booster in ai_suggestions.boosters %}
+            <div class="ai-booster-card">
+                <div>
+                    <span class="badge badge-verified" style="margin-bottom: 0.4rem;">High Protein</span>
+                    <div class="ai-booster-name">{{ booster.food.name }}</div>
+                    <div class="ai-booster-meta">
+                        Serving: <strong>{{ booster.serving_g }}g</strong> &bull; {{ booster.calories }} kcal
+                    </div>
+                    <div style="display: flex; gap: 0.4rem; font-size: 0.75rem; margin-bottom: 0.85rem;">
+                        <span class="badge badge-protein">+{{ booster.protein }}g Protein</span>
+                        <span class="badge badge-carb">{{ booster.carb }}g C</span>
+                        <span class="badge badge-fat">{{ booster.fat }}g F</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-sm"
+                        data-open-modal="logMealModal"
+                        data-food-id="{{ booster.food.id }}"
+                        data-food-name="{{ booster.food.name }}"
+                        data-serving-g="{{ booster.serving_g }}"
+                        data-meal-type="dinner">
+                    + Log {{ booster.serving_g }}g to Dinner
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Natural Language AI Quick Entry -->
+<div class="ai-quick-logger">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+        <div>
+            <strong style="font-size: 0.95rem;">⚡ AI Natural Language Food Logger</strong>
+            <p style="font-size: 0.82rem; color: var(--text-muted);">
+                Type what you ate (e.g. <em>"180g salmon fillet"</em>, <em>"2 large eggs"</em>, or <em>"1 scoop whey protein"</em>)
+            </p>
+        </div>
+        <div id="aiQuickLogStatus" style="font-size: 0.85rem; color: var(--primary-dark); font-weight: 600; display: none;"></div>
+    </div>
+    <div class="quick-log-row">
+        <input type="text" id="aiQuickLogInput" class="form-input quick-log-input" placeholder="Type meal query (e.g. 200g chicken breast or 150g greek yogurt)...">
+        <button id="aiQuickLogBtn" class="btn btn-accent">🤖 AI Parse &amp; Log</button>
+    </div>
+</div>
+
+<!-- Charts Section: 7-Day Trend & Macronutrient Doughnut -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+    <!-- Weekly Bar Chart -->
+    <div class="card">
+        <div class="card-title">
+            <span>📅 Past 7 Days Protein (g)</span>
+            <span style="font-size: 0.82rem; color: var(--text-muted); font-weight: normal;">Target: {{ target_protein }}g</span>
+        </div>
+        <div style="height: 240px; position: relative;">
+            <canvas id="weeklyTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Macronutrient Doughnut Chart -->
+    <div class="card">
+        <div class="card-title">
+            <span>🥧 Today's Macro Distribution</span>
+            <span style="font-size: 0.82rem; color: var(--text-muted); font-weight: normal;">Daily Energy Breakdown</span>
+        </div>
+        <div style="height: 240px; position: relative; display: flex; justify-content: center;">
+            <canvas id="macroDoughnutChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Today's Logged Meals Breakdown -->
+<div style="margin-bottom: 3rem;">
+    <h2 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 1.25rem;">Today's Meal Diary</h2>
+
+    <!-- Breakfast -->
+    <div class="meal-group-card">
+        <div class="meal-group-header">
+            <span class="meal-group-title">🌅 Breakfast</span>
+            <button class="btn btn-secondary btn-sm" data-open-modal="logMealModal" data-meal-type="breakfast">+ Add to Breakfast</button>
+        </div>
+        {% if breakfast_logs %}
+        <table class="meal-items-table">
+            <thead>
+                <tr>
+                    <th>Food Item</th>
+                    <th>Serving</th>
+                    <th>Calories</th>
+                    <th>Protein</th>
+                    <th>Carbs</th>
+                    <th>Fat</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in breakfast_logs %}
+                <tr>
+                    <td><strong>{{ log.food_name }}</strong></td>
+                    <td>{{ log.serving_amount_g }}g</td>
+                    <td>{{ log.calories }} kcal</td>
+                    <td><span class="badge badge-protein">{{ log.protein_g }}g</span></td>
+                    <td>{{ log.carbs_g }}g</td>
+                    <td>{{ log.fat_g }}g</td>
+                    <td>
+                        <a href="{% url 'delete_meal_log' log.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Remove this food log?')">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: 1.25rem 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+            No items logged for breakfast yet.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Lunch -->
+    <div class="meal-group-card">
+        <div class="meal-group-header">
+            <span class="meal-group-title">☀️ Lunch</span>
+            <button class="btn btn-secondary btn-sm" data-open-modal="logMealModal" data-meal-type="lunch">+ Add to Lunch</button>
+        </div>
+        {% if lunch_logs %}
+        <table class="meal-items-table">
+            <thead>
+                <tr>
+                    <th>Food Item</th>
+                    <th>Serving</th>
+                    <th>Calories</th>
+                    <th>Protein</th>
+                    <th>Carbs</th>
+                    <th>Fat</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in lunch_logs %}
+                <tr>
+                    <td><strong>{{ log.food_name }}</strong></td>
+                    <td>{{ log.serving_amount_g }}g</td>
+                    <td>{{ log.calories }} kcal</td>
+                    <td><span class="badge badge-protein">{{ log.protein_g }}g</span></td>
+                    <td>{{ log.carbs_g }}g</td>
+                    <td>{{ log.fat_g }}g</td>
+                    <td>
+                        <a href="{% url 'delete_meal_log' log.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Remove this food log?')">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: 1.25rem 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+            No items logged for lunch yet.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Dinner -->
+    <div class="meal-group-card">
+        <div class="meal-group-header">
+            <span class="meal-group-title">🌙 Dinner</span>
+            <button class="btn btn-secondary btn-sm" data-open-modal="logMealModal" data-meal-type="dinner">+ Add to Dinner</button>
+        </div>
+        {% if dinner_logs %}
+        <table class="meal-items-table">
+            <thead>
+                <tr>
+                    <th>Food Item</th>
+                    <th>Serving</th>
+                    <th>Calories</th>
+                    <th>Protein</th>
+                    <th>Carbs</th>
+                    <th>Fat</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in dinner_logs %}
+                <tr>
+                    <td><strong>{{ log.food_name }}</strong></td>
+                    <td>{{ log.serving_amount_g }}g</td>
+                    <td>{{ log.calories }} kcal</td>
+                    <td><span class="badge badge-protein">{{ log.protein_g }}g</span></td>
+                    <td>{{ log.carbs_g }}g</td>
+                    <td>{{ log.fat_g }}g</td>
+                    <td>
+                        <a href="{% url 'delete_meal_log' log.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Remove this food log?')">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: 1.25rem 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+            No items logged for dinner yet.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Snacks -->
+    <div class="meal-group-card">
+        <div class="meal-group-header">
+            <span class="meal-group-title">⚡ Snacks &amp; Post-Workout</span>
+            <button class="btn btn-secondary btn-sm" data-open-modal="logMealModal" data-meal-type="snack">+ Add Snack</button>
+        </div>
+        {% if snack_logs %}
+        <table class="meal-items-table">
+            <thead>
+                <tr>
+                    <th>Food Item</th>
+                    <th>Serving</th>
+                    <th>Calories</th>
+                    <th>Protein</th>
+                    <th>Carbs</th>
+                    <th>Fat</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in snack_logs %}
+                <tr>
+                    <td><strong>{{ log.food_name }}</strong></td>
+                    <td>{{ log.serving_amount_g }}g</td>
+                    <td>{{ log.calories }} kcal</td>
+                    <td><span class="badge badge-protein">{{ log.protein_g }}g</span></td>
+                    <td>{{ log.carbs_g }}g</td>
+                    <td>{{ log.fat_g }}g</td>
+                    <td>
+                        <a href="{% url 'delete_meal_log' log.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Remove this food log?')">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: 1.25rem 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+            No snacks or supplements logged yet.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Native HTML5 Dialog Modal for Food Logging -->
+<dialog id="logMealModal" class="custom-modal">
+    <div class="modal-header">
+        <h3 style="font-size: 1.15rem; font-weight: 700;">Log Food Item</h3>
+        <button class="btn btn-secondary btn-sm" data-close-modal style="padding: 0.2rem 0.5rem; font-weight: bold;">✕</button>
+    </div>
+
+    <form method="POST" action="{% url 'add_meal_log' %}">
+        {% csrf_token %}
+        <input type="hidden" name="logged_date" value="{{ current_date|date:'Y-m-d' }}">
+        
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label" for="modal_meal_type">Meal Slot</label>
+                <select name="meal_type" id="modal_meal_type" class="form-select">
+                    <option value="breakfast">Breakfast</option>
+                    <option value="lunch" selected>Lunch</option>
+                    <option value="dinner">Dinner</option>
+                    <option value="snack">Snack / Post-Workout</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="modal_food_select">Select from Food Database</label>
+                <select name="food_id" id="modal_food_select" class="form-select">
+                    <option value="">-- Choose a Food Item or enter custom below --</option>
+                    {% for food in all_foods %}
+                    <option value="{{ food.id }}"
+                            data-cals="{{ food.calories_per_100g }}"
+                            data-protein="{{ food.protein_per_100g }}"
+                            data-carbs="{{ food.carbs_per_100g }}"
+                            data-fat="{{ food.fat_per_100g }}"
+                            data-default-serving="{{ food.serving_size_g }}">
+                        {{ food.name }} ({{ food.protein_per_100g }}g P / 100g)
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="modal_food_name">Item Name</label>
+                <input type="text" name="food_name" id="modal_food_name" class="form-input" placeholder="e.g. Grilled Chicken Breast">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="modal_serving_g">Portion / Serving Size (grams)</label>
+                <input type="number" name="serving_g" id="modal_serving_g" class="form-input" value="100" min="1" step="1">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group">
+                    <label class="form-label" for="modal_calories">Calories (kcal)</label>
+                    <input type="number" name="calories" id="modal_calories" class="form-input" step="0.1" value="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="modal_protein">Protein (g)</label>
+                    <input type="number" name="protein_g" id="modal_protein" class="form-input" step="0.1" value="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="modal_carbs">Carbs (g)</label>
+                    <input type="number" name="carbs_g" id="modal_carbs" class="form-input" step="0.1" value="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="modal_fat">Fat (g)</label>
+                    <input type="number" name="fat_g" id="modal_fat" class="form-input" step="0.1" value="0">
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+            <button type="submit" class="btn btn-primary">+ Save Entry</button>
+        </div>
+    </form>
+</dialog>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Weekly Chart
+    const weeklyLabels = {{ history_labels_json|safe }};
+    const weeklyProtein = {{ history_protein_json|safe }};
+    const targetP = {{ target_protein }};
+
+    const ctxWeekly = document.getElementById('weeklyTrendChart');
+    if (ctxWeekly) {
+        new Chart(ctxWeekly, {
+            type: 'bar',
+            data: {
+                labels: weeklyLabels,
+                datasets: [
+                    {
+                        label: 'Protein (g)',
+                        data: weeklyProtein,
+                        backgroundColor: '#10b981',
+                        borderRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `${ctx.raw}g protein (Target: ${targetP}g)`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: targetP * 1.15,
+                        grid: { color: '#f1f5f9' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
+    // 2. Macronutrient Doughnut Chart
+    const ctxMacro = document.getElementById('macroDoughnutChart');
+    if (ctxMacro) {
+        const loggedP = {{ logged_protein }};
+        const loggedC = {{ logged_carbs }};
+        const loggedF = {{ logged_fat }};
+
+        const totalMacros = (loggedP * 4) + (loggedC * 4) + (loggedF * 9);
+        const dataValues = totalMacros > 0 ? [loggedP * 4, loggedC * 4, loggedF * 9] : [1, 1, 1];
+
+        new Chart(ctxMacro, {
+            type: 'doughnut',
+            data: {
+                labels: ['Protein (kcal)', 'Carbohydrates (kcal)', 'Fat (kcal)'],
+                datasets: [{
+                    data: dataValues,
+                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 12, font: { size: 11 } }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

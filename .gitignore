@@ -1,0 +1,22 @@
+# Python & Virtualenv
+venv/
+env/
+ENV/
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+
+# SQLite Database
+db.sqlite3
+db.sqlite3-journal
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp

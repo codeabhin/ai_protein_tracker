@@ -1,0 +1,121 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Protein Intake Calculator & Diet Food Tracker{% endblock %}</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- App CSS -->
+    <link rel="stylesheet" href="{% static 'tracker/css/style.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="{% url 'home' %}" class="brand-logo">
+                <span class="brand-icon">⚡</span>
+                <span>Protein<span style="color: var(--primary);">AI</span></span>
+                <span class="brand-badge">Smart Tracker</span>
+            </a>
+
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">Home</a></li>
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">📊 Daily Tracker</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'calculator' %}" class="nav-link {% if request.resolver_match.url_name == 'calculator' %}active{% endif %}">🧮 AI Calculator</a></li>
+                    <li><a href="{% url 'food_database' %}" class="nav-link {% if request.resolver_match.url_name == 'food_database' %}active{% endif %}">🥗 Food Database</a></li>
+                </ul>
+            </nav>
+
+            <div class="nav-actions">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'profile' %}" class="btn btn-secondary btn-sm">👤 {{ user.first_name|default:user.username }}</a>
+                    <a href="{% url 'logout' %}" class="btn btn-outline btn-sm">Logout</a>
+                {% else %}
+                    <a href="{% url 'demo_login' %}" class="btn btn-secondary btn-sm" title="Instant access with preloaded data">🚀 Instant Demo</a>
+                    <a href="{% url 'login' %}" class="btn btn-outline btn-sm">Log In</a>
+                    <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Sign Up</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Flash Messages Container -->
+    {% if messages %}
+    <div class="alert-container">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}error{% else %}{{ message.tags }}{% endif %}">
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content Block -->
+    <main class="main-wrapper">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-col" style="grid-column: span 1;">
+                <h4>ProteinAI Tracker</h4>
+                <p style="font-size: 0.88rem; line-height: 1.5; margin-bottom: 1rem;">
+                    AI-powered protein intake calculator and daily diet tracking system to help you hit your fitness and nutrition goals with precision.
+                </p>
+                <div style="font-size: 0.82rem; color: #64748b;">
+                    Simple, fast, and personalized food logging.
+                </div>
+            </div>
+
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'calculator' %}">AI Macro Calculator</a></li>
+                    <li><a href="{% url 'food_database' %}">Food Database</a></li>
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'dashboard' %}">Daily Tracker</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div class="footer-col">
+                <h4>Account &amp; Access</h4>
+                <ul>
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'profile' %}">Profile Settings</a></li>
+                    <li><a href="{% url 'logout' %}">Sign Out</a></li>
+                    {% else %}
+                    <li><a href="{% url 'login' %}">Log In</a></li>
+                    <li><a href="{% url 'register' %}">Sign Up</a></li>
+                    <li><a href="{% url 'demo_login' %}">Instant Demo Account</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div>&copy; 2026 ProteinAI - AI Protein Intake Calculator &amp; Diet Food Tracking System.</div>
+            <div style="display: flex; gap: 1.5rem;">
+                <a href="{% url 'calculator' %}">AI Calculator</a>
+                <a href="{% url 'food_database' %}">Foods</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- App JavaScript -->
+    <script src="{% static 'tracker/js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

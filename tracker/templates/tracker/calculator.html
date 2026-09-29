@@ -1,0 +1,193 @@
+{% extends 'tracker/base.html' %}
+
+{% block title %}AI Protein Intake & Diet Macro Calculator{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">AI Protein Intake &amp; Diet Macro Calculator</h1>
+        <p class="page-subtitle">
+            Calculate your personalized daily protein target, energy expenditure, and ideal macronutrient balance.
+        </p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 2rem; align-items: start;">
+    <!-- Inputs Form Card -->
+    <div class="card">
+        <h3 class="card-title">1. Your Body &amp; Activity Profile</h3>
+        
+        <form method="POST" action="{% url 'calculator' %}">
+            {% csrf_token %}
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="weight_kg">Weight (kg)</label>
+                    <input type="number" step="0.1" name="weight_kg" id="weight_kg" class="form-input" value="{{ initial_data.weight_kg }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="height_cm">Height (cm)</label>
+                    <input type="number" step="0.1" name="height_cm" id="height_cm" class="form-input" value="{{ initial_data.height_cm }}" required>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="age">Age (years)</label>
+                    <input type="number" name="age" id="age" class="form-input" value="{{ initial_data.age }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="gender">Biological Sex</label>
+                    <select name="gender" id="gender" class="form-select">
+                        <option value="male" {% if initial_data.gender == 'male' %}selected{% endif %}>Male</option>
+                        <option value="female" {% if initial_data.gender == 'female' %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="activity_level">Physical Activity Level</label>
+                <select name="activity_level" id="activity_level" class="form-select">
+                    <option value="sedentary" {% if initial_data.activity_level == 'sedentary' %}selected{% endif %}>Sedentary (Desk job, little/no exercise)</option>
+                    <option value="light" {% if initial_data.activity_level == 'light' %}selected{% endif %}>Lightly Active (1-3 days light exercise)</option>
+                    <option value="moderate" {% if initial_data.activity_level == 'moderate' %}selected{% endif %}>Moderately Active (3-5 days gym/sports)</option>
+                    <option value="very_active" {% if initial_data.activity_level == 'very_active' %}selected{% endif %}>Very Active (6-7 days heavy training)</option>
+                    <option value="extra_active" {% if initial_data.activity_level == 'extra_active' %}selected{% endif %}>Extra Active (Intense training twice/day)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="fitness_goal">Primary Fitness Goal</label>
+                <select name="fitness_goal" id="fitness_goal" class="form-select">
+                    <option value="muscle_gain" {% if initial_data.fitness_goal == 'muscle_gain' %}selected{% endif %}>Build Muscle / Hypertrophy (Higher protein)</option>
+                    <option value="fat_loss" {% if initial_data.fitness_goal == 'fat_loss' %}selected{% endif %}>Fat Loss / Cutting (Preserve lean muscle)</option>
+                    <option value="maintenance" {% if initial_data.fitness_goal == 'maintenance' %}selected{% endif %}>Maintain Health &amp; Weight</option>
+                    <option value="endurance" {% if initial_data.fitness_goal == 'endurance' %}selected{% endif %}>Endurance &amp; Stamina</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="dietary_preference">Dietary Preference</label>
+                <select name="dietary_preference" id="dietary_preference" class="form-select">
+                    <option value="omnivore" {% if initial_data.dietary_preference == 'omnivore' %}selected{% endif %}>Omnivore (All foods)</option>
+                    <option value="vegetarian" {% if initial_data.dietary_preference == 'vegetarian' %}selected{% endif %}>Vegetarian</option>
+                    <option value="vegan" {% if initial_data.dietary_preference == 'vegan' %}selected{% endif %}>Vegan</option>
+                    <option value="pescatarian" {% if initial_data.dietary_preference == 'pescatarian' %}selected{% endif %}>Pescatarian</option>
+                    <option value="keto" {% if initial_data.dietary_preference == 'keto' %}selected{% endif %}>Keto / Low-Carb</option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    ⚡ Calculate Macro Targets
+                </button>
+                {% if user.is_authenticated %}
+                <button type="submit" name="save_to_profile" value="1" class="btn btn-accent">
+                    💾 Save to Profile
+                </button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Calculated Results Card -->
+    {% if result %}
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <!-- Core Target Box -->
+        <div class="card" style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%); border: 2px solid #a7f3d0;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                <div>
+                    <span class="badge badge-protein">Optimal Target</span>
+                    <h2 style="font-size: 1.6rem; font-weight: 800; margin-top: 0.5rem; color: #064e3b;">
+                        Recommended Daily Protein
+                    </h2>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 2.8rem; font-weight: 800; color: #059669; line-height: 1;">
+                        {{ result.daily_protein }}<span style="font-size: 1.2rem; font-weight: 600;">g</span>
+                    </div>
+                    <div style="font-size: 0.85rem; font-weight: 700; color: #047857;">
+                        {{ result.protein_ratio }} g/kg bodyweight
+                    </div>
+                </div>
+            </div>
+
+            <p style="font-size: 0.92rem; color: #1e293b; line-height: 1.5; margin-bottom: 1.25rem;">
+                <strong>Plan Strategy:</strong> {{ result.goal_summary }}
+            </p>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; text-align: center;">
+                <div style="background: white; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">TOTAL ENERGY</div>
+                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--calories-color);">{{ result.daily_calories }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">kcal/day</div>
+                </div>
+                <div style="background: white; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">CARBOHYDRATES</div>
+                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--carb-color);">{{ result.daily_carbs }}g</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Energy &amp; Fiber</div>
+                </div>
+                <div style="background: white; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">HEALTHY FATS</div>
+                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--fat-color);">{{ result.daily_fat }}g</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Essential Lipids</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Meal Distribution Card -->
+        <div class="card">
+            <h3 class="card-title">
+                <span>⏱️ Recommended Meal Protein Distribution</span>
+                <span class="badge badge-verified">Balanced Pacing</span>
+            </h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
+                Distributing your protein intake evenly (~{{ result.per_meal_protein }}g per meal) across the day helps sustain energy, support muscle recovery, and manage appetite:
+            </p>
+
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; text-align: center;">
+                <div style="background: var(--bg-elevated); padding: 0.75rem 0.5rem; border-radius: var(--radius-md);">
+                    <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">MEAL 1</div>
+                    <div style="font-weight: 800; color: var(--primary); font-size: 1.1rem;">{{ result.per_meal_protein }}g</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted);">Breakfast</div>
+                </div>
+                <div style="background: var(--bg-elevated); padding: 0.75rem 0.5rem; border-radius: var(--radius-md);">
+                    <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">MEAL 2</div>
+                    <div style="font-weight: 800; color: var(--primary); font-size: 1.1rem;">{{ result.per_meal_protein }}g</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted);">Lunch</div>
+                </div>
+                <div style="background: var(--bg-elevated); padding: 0.75rem 0.5rem; border-radius: var(--radius-md);">
+                    <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">MEAL 3</div>
+                    <div style="font-weight: 800; color: var(--primary); font-size: 1.1rem;">{{ result.per_meal_protein }}g</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted);">Snack/Post-Wkt</div>
+                </div>
+                <div style="background: var(--bg-elevated); padding: 0.75rem 0.5rem; border-radius: var(--radius-md);">
+                    <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">MEAL 4</div>
+                    <div style="font-weight: 800; color: var(--primary); font-size: 1.1rem;">{{ result.per_meal_protein }}g</div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted);">Dinner</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Baselines & Hydration -->
+        <div class="card">
+            <h3 class="card-title">Energy Expenditure &amp; Hydration</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem;">
+                <div>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Basal Metabolic Rate (BMR)</span>
+                    <div style="font-size: 1.25rem; font-weight: 800;">{{ result.bmr }} <span style="font-size: 0.8rem; font-weight: normal;">kcal</span></div>
+                </div>
+                <div>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">TDEE (Daily Burn)</span>
+                    <div style="font-size: 1.25rem; font-weight: 800;">{{ result.tdee }} <span style="font-size: 0.8rem; font-weight: normal;">kcal</span></div>
+                </div>
+                <div>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Recommended Daily Water</span>
+                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--accent);">{{ result.daily_water_liters }} <span style="font-size: 0.8rem; font-weight: normal;">Liters</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
